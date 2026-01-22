@@ -11,6 +11,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -319,14 +320,17 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Define our GroupVersion
+	schemeGroupVersion := schema.GroupVersion{Group: "example.com", Version: "v1"}
+
 	// Register our types
 	schemeBuilder := runtime.NewSchemeBuilder(func(scheme *runtime.Scheme) error {
 		scheme.AddKnownTypes(
-			metav1.SchemeGroupVersion.WithGroup("example.com").WithVersion("v1"),
+			schemeGroupVersion,
 			&WebApp{},
 			&WebAppList{},
 		)
-		metav1.AddToGroupVersion(scheme, metav1.SchemeGroupVersion.WithGroup("example.com").WithVersion("v1"))
+		metav1.AddToGroupVersion(scheme, schemeGroupVersion)
 		return nil
 	})
 

@@ -6,45 +6,45 @@
 ┌─────────────────────────────────────────────────────────────┐
 │                      Kubernetes API Server                  │
 │                                                             │
-│  ┌─────────────────┐  ┌──────────────┐  ┌──────────────┐  │
-│  │ WebApp CRD      │  │ Deployments  │  │ Services     │  │
-│  │ (Custom)        │  │ (Built-in)   │  │ (Built-in)   │  │
-│  └─────────────────┘  └──────────────┘  └──────────────┘  │
-└──────────────┬──────────────────┬───────────────┬──────────┘
+│  ┌─────────────────┐  ┌──────────────┐  ┌──────────────┐    │
+│  │ WebApp CRD      │  │ Deployments  │  │ Services     │    │
+│  │ (Custom)        │  │ (Built-in)   │  │ (Built-in)   │    │
+│  └─────────────────┘  └──────────────┘  └──────────────┘    │
+└──────────────┬──────────────────┬───────────────┬───────────┘
                │                  │               │
                │ Watch            │ Watch         │ Watch
                │                  │               │
          ┌─────▼──────────────────▼───────────────▼─────┐
-         │         WebApp Operator (Controller)          │
-         │                                               │
+         │         WebApp Operator (Controller)         │
+         │                                              │
          │  ┌──────────────────────────────────────┐    │
          │  │  Manager                             │    │
          │  │  - Starts/stops controllers          │    │
          │  │  - Manages shared cache              │    │
          │  │  - Handles leader election           │    │
          │  └──────────────────────────────────────┘    │
-         │                                               │
+         │                                              │
          │  ┌──────────────────────────────────────┐    │
          │  │  Informer (Cache)                    │    │
          │  │  - Watches API server                │    │
          │  │  - Local cache of resources          │    │
          │  │  - Reduces API server load           │    │
          │  └──────────────────────────────────────┘    │
-         │                                               │
+         │                                              │
          │  ┌──────────────────────────────────────┐    │
          │  │  Work Queue                          │    │
          │  │  - Receives watch events             │    │
          │  │  - Deduplicates requests             │    │
          │  │  - Rate limiting                     │    │
          │  └──────────────────────────────────────┘    │
-         │                                               │
+         │                                              │
          │  ┌──────────────────────────────────────┐    │
          │  │  WebAppReconciler                    │    │
          │  │  - Reconcile() function              │    │
          │  │  - Business logic                    │    │
          │  │  - Creates/updates resources         │    │
          │  └──────────────────────────────────────┘    │
-         └───────────────────────────────────────────────┘
+         └──────────────────────────────────────────────┘
 ```
 
 ## Reconciliation Flow
@@ -80,24 +80,24 @@ User Action: kubectl apply -f webapp.yaml
           ┌───────────────────────────────────────┐
           │  Reconcile(ctx, Request)              │
           │                                       │
-          │  1. Fetch WebApp from cache          │
+          │  1. Fetch WebApp from cache           │
           │     ↓                                 │
-          │  2. Check Deployment exists          │
-          │     ├─ No  → Create Deployment       │
-          │     └─ Yes → Check if matches spec   │
-          │                ├─ No  → Update it    │
-          │                └─ Yes → Continue     │
+          │  2. Check Deployment exists           │
+          │     ├─ No  → Create Deployment        │
+          │     └─ Yes → Check if matches spec    │
+          │                ├─ No  → Update it     │
+          │                └─ Yes → Continue      │
           │     ↓                                 │
-          │  3. Check Service exists             │
-          │     ├─ No  → Create Service          │
-          │     └─ Yes → Continue                │
+          │  3. Check Service exists              │
+          │     ├─ No  → Create Service           │
+          │     └─ Yes → Continue                 │
           │     ↓                                 │
-          │  4. Update WebApp status             │
-          │     - availableReplicas              │
-          │     - conditions                     │
+          │  4. Update WebApp status              │
+          │     - availableReplicas               │
+          │     - conditions                      │
           │     ↓                                 │
-          │  5. Return Result                    │
-          │     - RequeueAfter: 30s              │
+          │  5. Return Result                     │
+          │     - RequeueAfter: 30s               │
           └───────────┬───────────────────────────┘
                       │
                       │ Success
@@ -163,22 +163,22 @@ The operator watches three types of resources:
 │                                                 │
 │  For(&WebApp{})                                 │
 │    ↓                                            │
-│    Primary watch - triggers reconcile when:    │
-│    - WebApp created                            │
-│    - WebApp updated                            │
-│    - WebApp deleted                            │
+│    Primary watch - triggers reconcile when:     │
+│    - WebApp created                             │
+│    - WebApp updated                             │
+│    - WebApp deleted                             │
 │                                                 │
-│  Owns(&Deployment{})                           │
+│  Owns(&Deployment{})                            │
 │    ↓                                            │
-│    Secondary watch - triggers reconcile when:  │
-│    - Owned Deployment changes                  │
-│    - Owned Deployment deleted                  │
+│    Secondary watch - triggers reconcile when:   │
+│    - Owned Deployment changes                   │
+│    - Owned Deployment deleted                   │
 │                                                 │
-│  Owns(&Service{})                              │
+│  Owns(&Service{})                               │
 │    ↓                                            │
-│    Secondary watch - triggers reconcile when:  │
-│    - Owned Service changes                     │
-│    - Owned Service deleted                     │
+│    Secondary watch - triggers reconcile when:   │
+│    - Owned Service changes                      │
+│    - Owned Service deleted                      │
 └─────────────────────────────────────────────────┘
 ```
 
